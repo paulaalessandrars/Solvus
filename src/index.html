@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solvus</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="sticky-top">
+    <div class="container">
+        <header>
+            <h1>SOLVUS</h1>
+            <div class="controls">
+                <button id="btn-toggle-ocultar" class="btn-icon" title="Ocultar/Mostrar valores">
+                    <span>👁️</span> <span id="btnText">Ocultar</span>
+                </button>
+                <button id="btn-exportar-excel" class="btn-icon btn-excel" title="Exportar planilha Excel">📥 Exportar</button>
+                <input type="file" id="excelInput" class="hidden" accept=".xlsx,.xls">
+                <button id="btn-importar-excel" class="btn-icon btn-excel" title="Importar planilha Excel">📊 Importar</button>
+                <button id="btn-backup" class="btn-icon" title="Salvar backup JSON">💾 Backup</button>
+                <input type="file" id="fileInput" class="hidden" accept=".json">
+                <button id="btn-restaurar" class="btn-icon" title="Restaurar backup JSON">📂 Restaurar</button>
+                <button id="btn-pin" class="btn-icon" title="Configurar senha de acesso">🔐</button>
+                <button id="btn-tema" class="btn-icon" title="Alternar tema"><span id="tema-icon">🌙</span></button>
+            </div>
+        </header>
+
+        
+        <div class="cards">
+            <div class="card">
+                <div class="lbl">Entradas</div>
+                <div id="v-ent" class="money money--entrada">R$ 0,00</div>
+            </div>
+            <div class="card">
+                <div class="lbl">Saídas</div>
+                <div id="v-sai" class="money money--saida">R$ 0,00</div>
+            </div>
+            <div class="card">
+                <div class="lbl">Saldo Mês</div>
+                <div id="v-sal" class="money">R$ 0,00</div>
+            </div>
+            <div class="card card--primary">
+                <div id="lbl-anual" class="lbl lbl--primary">Saldo Anual</div>
+                <div id="v-anual" class="money">R$ 0,00</div>
+            </div>
+            <div class="card card--secondary">
+                <div class="lbl lbl--secondary">Saldo Total</div>
+                <div id="v-total" class="money">R$ 0,00</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container main-content">
+
+    
+    <div id="insights-panel" class="insights-panel"></div>
+
+    
+    <div id="tips-panel" class="hidden"></div>
+
+    
+    <div id="pet-panel" class="pet-panel"></div>
+
+    
+    <div class="panel trend-panel">
+        <div class="accordion-header" data-target="content-trend">
+            <span>▼</span>
+            <h3>📈 Visão Anual — Entradas vs. Saídas</h3>
+        </div>
+        <div id="content-trend" class="accordion-content active">
+            <div class="chart-container chart-trend">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="panel comparativo-panel">
+      <div class="accordion-header" data-target="content-comparativo">
+        <span>▶</span><h3>⚖️ Comparativo entre Meses</h3>
+      </div>
+      <div id="content-comparativo" class="accordion-content">
+        <div class="comparativo-selectors">
+          <div class="comparativo-col"><label class="comp-label-title">Período A</label><div class="comp-sel-row"><select id="comp-mes-a"></select><select id="comp-ano-a"></select></div></div>
+          <div class="comparativo-vs">vs</div>
+          <div class="comparativo-col"><label class="comp-label-title">Período B</label><div class="comp-sel-row"><select id="comp-mes-b"></select><select id="comp-ano-b"></select></div></div>
+        </div>
+        <div id="comparativo-result"></div>
+      </div>
+    </div>
+
+    
+    <div class="grid-master">
+
+        
+        <div>
+            
+            <div class="panel">
+                <div class="accordion-header" data-target="content-man">
+                    <span>▼</span>
+                    <h3 id="title-man">📝 Novo Lançamento</h3>
+                </div>
+                <div id="content-man" class="accordion-content active">
+                    <div class="launch-toggle">
+                        <button id="toggle-avulso" class="toggle-btn active" onclick="setLaunchMode('avulso')">📋 Avulso</button>
+                        <button id="toggle-fixa"   class="toggle-btn toggle-btn--fixa" onclick="setLaunchMode('fixa')">⚡ Conta Fixa</button>
+                    </div>
+                    <div id="man-data-wrap">
+                        <input type="date" id="man-data">
+                    </div>
+                    
+                    <div id="parcelas-wrap" class="hidden">
+                        <input type="number" id="man-parcelas" class="input-parcelas"
+                               placeholder="Nº de parcelas (deixe vazio para recorrente sem fim)"
+                               min="1" max="360" step="1">
+                    </div>
+                    <input type="text" id="man-desc" placeholder="Descrição">
+                    <input type="text" id="man-obs" class="input-obs" placeholder="Obs (Opcional)">
+                    <input type="text" id="man-vinculo" class="input-vinculo" placeholder="🔗 Vínculo (ex: Julia, Santander, Nubank)">
+                    <div class="row">
+                        <input type="number" id="man-val" placeholder="Valor" step="0.01" min="0">
+                        <select id="man-tipo" class="select-tipo"></select>
+                    </div>
+                    <select id="man-cat"></select>
+                    <div class="row--sm">
+                        <button id="btn-add-man" class="btn-action">Adicionar</button>
+                        <button id="btn-cancel-man" class="btn-cancel hidden">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="panel">
+                <div class="accordion-header" data-target="content-gastos">
+                    <span>▼</span>
+                    <h3>📊 Gastos por Categoria</h3>
+                </div>
+                <div id="content-gastos" class="accordion-content active">
+                    <div class="chart-container"><canvas id="myChart"></canvas></div>
+                </div>
+            </div>
+
+            
+            <div class="panel">
+                <div class="accordion-header" data-target="content-notas">
+                    <span>▼</span>
+                    <h3>📌 Anotações</h3>
+                </div>
+                <div id="content-notas" class="accordion-content active">
+                    <div class="note-toolbar">
+                        <input type="text" id="note-text" placeholder="Escreva algo...">
+                        <button id="btn-add-nota" class="btn-action btn-add-nota">+</button>
+                    </div>
+                    <div id="lista-notas"></div>
+                </div>
+            </div>
+
+            
+            <div class="panel">
+                <div class="accordion-header" data-target="content-metas">
+                    <span>▶</span>
+                    <h3>🎯 Metas de Longo Prazo</h3>
+                </div>
+                <div id="content-metas" class="accordion-content">
+                    <div class="meta-form-box">
+                        <input type="text" id="meta-nome" placeholder="Nome da meta (ex: Casamento, Viagem)">
+                        <div class="row">
+                            <input type="number" id="meta-obj" placeholder="Valor objetivo (R$)" min="0" step="0.01">
+                            <input type="text" id="meta-icone" placeholder="🎯" maxlength="2" class="meta-icone-input">
+                        </div>
+                        <input type="number" id="meta-atual" placeholder="Quanto já tenho (R$)" min="0" step="0.01">
+                        <input type="number" id="meta-aporte" placeholder="💳 Aporte mensal planejado (R$) — opcional" min="0" step="0.01">
+                        <button id="btn-add-meta" class="btn-action">Criar Meta</button>
+                    </div>
+                    <div id="lista-metas"></div>
+                </div>
+            </div>
+
+            
+            <div class="panel">
+              <div class="accordion-header" data-target="content-cats-custom">
+                <span>▶</span>
+                <h3>🏷️ Categorias Personalizadas</h3>
+              </div>
+              <div id="content-cats-custom" class="accordion-content">
+                <p class="vinculo-hint">Crie categorias extras que aparecem nos formulários de lançamento.</p>
+                <div class="note-toolbar">
+                  <input type="text" id="cat-custom-input" placeholder="Nome da categoria..." maxlength="30">
+                  <button id="btn-add-cat-custom" class="btn-action btn-add-nota">+</button>
+                </div>
+                <div id="lista-cats-custom"></div>
+              </div>
+            </div>
+
+            
+            <div class="panel">
+                <div class="accordion-header" data-target="content-vinculos">
+                    <span>▶</span>
+                    <h3>🔗 Vínculos & Dívidas</h3>
+                </div>
+                <div id="content-vinculos" class="accordion-content">
+                    <p class="vinculo-hint">Veja o total acumulado por pessoa ou instituição vinculada aos seus lançamentos.</p>
+                    <div id="painel-vinculos-content"></div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div>
+            <div class="panel">
+                <div class="extrato-header">
+                    <div class="accordion-header accordion-header--plain" data-target="content-extrato">
+                        <span>▼</span>
+                        <h3>Extrato</h3>
+                    </div>
+                    <div class="row--filters">
+                        <select id="filtro-mes"></select>
+                        <select id="filtro-ano"></select>
+                        <button id="btn-resetar" class="btn-danger" title="Limpar mês">🗑️</button>
+                    </div>
+                </div>
+
+                <div id="content-extrato" class="accordion-content active">
+
+                    
+                    <div class="accordion-header" data-target="content-fixas">
+                        <span>▶</span> ⚡ Contas Fixas
+                    </div>
+                    <div id="content-fixas" class="accordion-content">
+                        <p class="rec-hint">Gerencie seus modelos fixos aqui. Para adicionar um novo, use <strong>Novo Lançamento → Conta Fixa</strong>.</p>
+                        <div id="lista-recorrentes"></div>
+                        <div id="rec-selection-summary" class="selection-summary hidden"></div>
+                        <button id="btn-lancar-selecionadas" class="btn-action btn-action--outline">
+                            🚀 Lançar Selecionadas
+                        </button>
+                    </div>
+
+                    
+                    <div class="accordion-header" data-target="content-mes">
+                        <span>▼</span> 📜 Lançamentos do Mês
+                    </div>
+                    <div id="content-mes" class="accordion-content active">
+                        <div class="accordion-header" data-target="content-heatmap">
+                          <span>▶</span> 🗓️ Mapa de Gastos do Mês
+                        </div>
+                        <div id="content-heatmap" class="accordion-content">
+                          <div id="heatmap-gastos"></div>
+                        </div>
+                        <div class="search-wrapper">
+                            <div class="search-row">
+                                <input type="text" id="search-input" placeholder="🔍 Buscar por descrição, categoria, obs ou vínculo...">
+                                <select id="filtro-cat" class="filtro-cat-select">
+                                    <option value="">Todas as categorias</option>
+                                </select>
+                            </div>
+                            <div id="search-summary" class="search-summary hidden"></div>
+                        </div>
+                        <div id="lista-transacoes"></div>
+                        <div id="selection-summary" class="selection-summary hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="feed-col">
+            <div class="panel feed-panel">
+                <div class="feed-panel-header">
+                    <span class="feed-panel-icon">📡</span>
+                    <h3>Radar Financeiro</h3>
+                </div>
+                <div id="smart-feed"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer class="footer-app">
+    Solvus &nbsp;·&nbsp; v1.1.0 &nbsp;·&nbsp; Seus dados ficam salvos localmente no seu computador
+</footer>
+
+<div id="pin-overlay" class="pin-overlay hidden">
+    <div class="pin-box">
+        <div class="pin-logo">🔐</div>
+        <h2 class="pin-title">SOLVUS</h2>
+        <p class="pin-subtitle">Digite sua senha para continuar</p>
+        <input type="password" id="pin-input" class="pin-input" placeholder="Senha" maxlength="32" autocomplete="current-password">
+        <button id="pin-submit" class="btn-action pin-btn">Entrar</button>
+        <div id="pin-error" class="pin-error hidden">❌ Senha incorreta</div>
+    </div>
+</div>
+
+<div id="pin-setup-modal" class="modal-overlay hidden">
+    <div class="modal-box pin-setup-box">
+        <h3>🔐 Senha de Acesso</h3>
+        <p id="pin-setup-desc" style="color:var(--muted);font-size:0.88rem;margin:0 0 16px">Configure uma senha para proteger seus dados.</p>
+        <input type="password" id="pin-setup-new" placeholder="Nova senha" maxlength="32" autocomplete="new-password">
+        <input type="password" id="pin-setup-confirm" placeholder="Confirmar senha" maxlength="32" autocomplete="new-password">
+        <div class="modal-actions">
+            <button id="pin-setup-save" class="btn-action btn-modal">Salvar</button>
+            <button id="pin-setup-cancel" class="btn-cancel btn-modal">Cancelar</button>
+        </div>
+        <button id="pin-setup-remove" class="btn-list hidden" style="margin-top:12px;width:100%;opacity:0.7">🗑️ Remover senha</button>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="app.js"></script>
+</body>
+</html>

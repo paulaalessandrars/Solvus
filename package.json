@@ -1,0 +1,43 @@
+{
+  "name": "solvus",
+  "version": "1.1.0",
+  "description": "Solvus — Controle Financeiro Pessoal",
+  "author": "Paula",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:portable": "electron-builder --win portable",
+    "build:installer": "electron-builder --win nsis",
+    "icon": "node scripts/generate-icon.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^24.13.3",
+    "sharp": "^0.33.5"
+  },
+  "build": {
+    "appId": "com.solvus.app",
+    "productName": "Solvus",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "Solvus-${version}.exe"
+    }
+  }
+}
